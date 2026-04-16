@@ -37,10 +37,6 @@ fuel = st.selectbox("Fuel Type", sorted(fuel_map.keys()))
 brand = st.selectbox("Brand", sorted(brand_map.keys()))
 model_name = st.selectbox("Model", sorted(model_map.keys()))
 
-# Derived features
-car_age = datetime.now().year - year
-kms_per_year = kms / car_age if car_age > 0 else kms
-
 # -------------------------
 # Prediction
 # -------------------------
@@ -53,9 +49,7 @@ if st.button("Predict Price"):
     input_df["kms"] = kms
     input_df["owners"] = owners
     input_df["year"] = year
-    input_df["car_age"] = car_age
-    input_df["kms_per_year"] = kms_per_year
-
+   
     # categorical (SAFE mapping)
     input_df[city_map[city]] = 1
     input_df[fuel_map[fuel]] = 1
