@@ -9,7 +9,7 @@ def load_artifacts():
     model = pickle.load(open("model.pkl", "rb"))
     return model
 
-model, cols = load_artifacts()
+model = load_artifacts()
 
 st.set_page_config(page_title="Car Price Predictor", layout="centered")
 
