@@ -7,7 +7,7 @@ from datetime import datetime
 @st.cache_resource
 def load_artifacts():
     model = pickle.load(open("model.pkl", "rb"))
-    return model, cols
+    return model
 
 model, cols = load_artifacts()
 
