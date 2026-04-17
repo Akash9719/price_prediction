@@ -1,70 +1,64 @@
 import streamlit as st
 import pandas as pd
 import pickle
+import numpy as np
 from datetime import datetime
 
-# Load model and columns
+# -------------------------
+# Load model
+# -------------------------
 @st.cache_resource
-def load_artifacts():
-    model = pickle.load(open("model.pkl", "rb"))
-    return model
+def load_model():
+    return pickle.load(open("model.pkl", "rb"))
 
-model = load_artifacts()
+model = load_model()
 
+# -------------------------
+# UI
+# -------------------------
 st.set_page_config(page_title="Car Price Predictor", layout="centered")
 
 st.title("🚗 Car Price Prediction App")
 st.write("Enter car details to estimate price")
 
 # -------------------------
-# Create mapping (CRITICAL FIX)
-# -------------------------
-city_map = {col.replace("city_", ""): col for col in cols if col.startswith("city_")}
-fuel_map = {col.replace("fuel_", ""): col for col in cols if col.startswith("fuel_")}
-brand_map = {col.replace("brand_", ""): col for col in cols if col.startswith("brand_")}
-model_map = {col.replace("model_clean_", ""): col for col in cols if col.startswith("model_clean_")}
-
-# -------------------------
-# Dropdowns
+# Inputs
 # -------------------------
 kms = st.number_input("Kilometers Driven", min_value=0, value=50000)
 owners = st.selectbox("Number of Owners", [0, 1, 2, 3])
 year = st.number_input("Manufacturing Year", 1990, datetime.now().year, value=2018)
 
-city = st.selectbox("City", sorted(city_map.keys()))
-fuel = st.selectbox("Fuel Type", sorted(fuel_map.keys()))
-brand = st.selectbox("Brand", sorted(brand_map.keys()))
-model_name = st.selectbox("Model", sorted(model_map.keys()))
+city = st.selectbox("City", ["Delhi", "Mumbai", "Bangalore", "Ahmedabad"])
+fuel = st.selectbox("Fuel Type", ["Petrol", "Diesel", "CNG"])
+brand = st.selectbox("Brand", ["Maruti Suzuki", "Hyundai", "Honda", "Toyota"])
+model_name = st.text_input("Model (e.g., i20, Swift, City)")
 
 # -------------------------
 # Prediction
 # -------------------------
 if st.button("Predict Price"):
 
-    # Create input dataframe correctly
-    input_df = pd.DataFrame(0, index=[0], columns=cols)
+    current_year = datetime.now().year
+    car_age = current_year - year
+    kms_per_year = kms / (car_age + 1)
 
-    # numeric
-    input_df["kms"] = kms
-    input_df["owners"] = owners
-    input_df["year"] = year
-   
-    # categorical (SAFE mapping)
-    input_df[city_map[city]] = 1
-    input_df[fuel_map[fuel]] = 1
-    input_df[brand_map[brand]] = 1
-    input_df[model_map[model_name]] = 1
+    input_df = pd.DataFrame([{
+        "kms": kms,
+        "owners": owners,
+        "year": year,
+        "car_age": car_age,
+        "kms_per_year": kms_per_year,
+        "city": city,
+        "fuel": fuel,
+        "brand": brand,
+        "model_clean": model_name
+    }])
 
-    # ensure float
-    input_df = input_df.astype(float)
-
-    # Prediction
     try:
-        prediction = model.predict(input_df)[0]
+        prediction = np.expm1(model.predict(input_df))[0]
 
-        st.metric("💰 Estimated Price", f"₹ {round(prediction, 2):,}")
+        st.metric("💰 Estimated Price", f"₹ {round(prediction):,}")
 
-        # Debug (optional)
         with st.expander("See input features"):
             st.write(input_df)
 
