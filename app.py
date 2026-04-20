@@ -42,6 +42,10 @@ if st.button("Predict Price"):
     car_age = current_year - year
     kms_per_year = kms / (car_age + 1)
 
+    age_log = np.log1p(car_age)
+    age_squared = car_age ** 2
+    age_kms = car_age * kms
+
     input_df = pd.DataFrame([{
         "kms": kms,
         "owners": owners,
