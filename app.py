@@ -31,7 +31,7 @@ year = st.number_input("Manufacturing Year", 1990, datetime.now().year, value=20
 city = st.selectbox("City", ["Delhi", "Mumbai", "Bangalore", "Ahmedabad"])
 fuel = st.selectbox("Fuel Type", ["Petrol", "Diesel", "CNG"])
 brand = st.selectbox("Brand", ["Maruti Suzuki", "Hyundai", "Honda", "Toyota"])
-model_name = st.text_input("Model (e.g., i20, Swift, City)")
+model_name = st.text_input("Model (e.g., Swift, i20, City)")
 
 # -------------------------
 # Prediction
@@ -42,6 +42,7 @@ if st.button("Predict Price"):
     car_age = current_year - year
     kms_per_year = kms / (car_age + 1)
 
+    # Feature Engineering (same as training)
     age_log = np.log1p(car_age)
     age_squared = car_age ** 2
     age_kms = car_age * kms
@@ -56,7 +57,7 @@ if st.button("Predict Price"):
         "age_log": age_log,
         "age_squared": age_squared,
         "age_kms": age_kms,
-                
+
         "city": city,
         "fuel": fuel,
         "brand": brand,
@@ -64,7 +65,11 @@ if st.button("Predict Price"):
     }])
 
     try:
+        # 🔥 Raw model prediction
         prediction = np.expm1(model.predict(input_df))[0]
+
+        # 🔥 Practical correction (VERY IMPORTANT)
+        prediction = prediction * 0.65
 
         st.metric("💰 Estimated Price", f"₹ {round(prediction):,}")
 
