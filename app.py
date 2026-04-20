@@ -41,6 +41,7 @@ if st.button("Predict Price"):
     current_year = datetime.now().year
     car_age = current_year - year
     kms_per_year = kms / (car_age + 1)
+    age_weight = np.exp(-car_age / 5)
 
     # Feature Engineering (same as training)
     age_log = np.log1p(car_age)
@@ -57,6 +58,7 @@ if st.button("Predict Price"):
         "age_log": age_log,
         "age_squared": age_squared,
         "age_kms": age_kms,
+        "age_weight": age_weight,
 
         "city": city,
         "fuel": fuel,
