@@ -52,6 +52,11 @@ if st.button("Predict Price"):
         "year": year,
         "car_age": car_age,
         "kms_per_year": kms_per_year,
+
+        "age_log": age_log,
+        "age_squared": age_squared,
+        "age_kms": age_kms,
+                
         "city": city,
         "fuel": fuel,
         "brand": brand,
