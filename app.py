@@ -1,84 +1,78 @@
 import streamlit as st
 import pandas as pd
-import pickle
 import numpy as np
+import pickle
 from datetime import datetime
 
-# -------------------------
-# Load model
-# -------------------------
-@st.cache_resource
-def load_model():
-    return pickle.load(open("model.pkl", "rb"))
+# ================= LOAD =================
+model = pickle.load(open("model.pkl","rb"))
+columns = pickle.load(open("columns.pkl","rb"))
+brand_avg_price = pickle.load(open("brand_avg_price.pkl","rb"))
+global_mean_price = pickle.load(open("global_mean_price.pkl","rb"))
+model_freq = pickle.load(open("model_freq.pkl","rb"))
 
-model = load_model()
+# ================= FEATURES =================
+def create_features(df):
+    df = df.copy()
+    current_year = datetime.now().year
 
-# -------------------------
-# UI
-# -------------------------
-st.set_page_config(page_title="Car Price Predictor", layout="centered")
+    df["car_age"] = np.maximum(0, current_year - df["year"])
+    df["car_age_squared"] = df["car_age"] ** 2
+    df["car_age_cube"] = df["car_age"] ** 3
 
-st.title("🚗 Car Price Prediction App")
-st.write("Enter car details to estimate price")
+    df["kms_log"] = np.log1p(df["kms"])
+    df["kms_per_year"] = df["kms"] / (df["car_age"] + 1)
 
-# -------------------------
-# Inputs
-# -------------------------
-kms = st.number_input("Kilometers Driven", min_value=0, value=50000)
-owners = st.selectbox("Number of Owners", [0, 1, 2, 3])
-year = st.number_input("Manufacturing Year", 1990, datetime.now().year, value=2018)
+    df["age_kms"] = df["car_age"] * df["kms"]
+    df["age_kms_ratio"] = df["car_age"] / (df["kms"] + 1)
 
-city = st.selectbox("City", ["Delhi", "Mumbai", "Bangalore", "Ahmedabad"])
-fuel = st.selectbox("Fuel Type", ["Petrol", "Diesel", "CNG"])
-brand = st.selectbox("Brand", ["Maruti Suzuki", "Hyundai", "Honda", "Toyota"])
-model_name = st.text_input("Model (e.g., Swift, i20, City)")
+    df["depreciation_curve"] = np.exp(-df["car_age"] / 6)
 
-# -------------------------
-# Prediction
-# -------------------------
+    df["kms_per_owner"] = df["kms"] / (df["owners"] + 1)
+    df["age_per_owner"] = df["car_age"] / (df["owners"] + 1)
+
+    return df
+
+# ================= UI =================
+year = st.number_input("Year", 2000, 2025, 2020)
+kms = st.number_input("Kms", 0, 200000, 30000)
+owners = st.selectbox("Owners", [1,2,3,4])
+city = st.text_input("City", "Delhi")
+fuel = st.selectbox("Fuel", ["Petrol","Diesel","CNG"])
+brand = st.text_input("Brand", "Maruti Suzuki")
+model_clean = st.text_input("Model", "Swift")
+
+# ================= PREDICT =================
 if st.button("Predict Price"):
 
-    current_year = datetime.now().year
-    car_age = current_year - year
-    kms_per_year = kms / (car_age + 1)
-    age_weight = np.exp(-car_age / 5)
-
-    # Feature Engineering (same as training)
-    age_log = np.log1p(car_age)
-    age_squared = car_age ** 2
-    age_kms = car_age * kms
-
     input_df = pd.DataFrame([{
+        "year": year,
         "kms": kms,
         "owners": owners,
-        "year": year,
-        "car_age": car_age,
-        "kms_per_year": kms_per_year,
-
-        "age_log": age_log,
-        "age_squared": age_squared,
-        "age_kms": age_kms,
-        "age_weight": age_weight,
-
         "city": city,
         "fuel": fuel,
         "brand": brand,
-        "model_clean": model_name
+        "model_clean": model_clean
     }])
 
-    try:
-        # 🔥 Raw model prediction
-        prediction = np.expm1(model.predict(input_df))[0]
+    # Features
+    input_df = create_features(input_df)
 
-        # 🔥 Practical correction (VERY IMPORTANT)
-        prediction = prediction * 0.65
+    # Brand value
+    input_df["brand_value"] = input_df["brand"].map(brand_avg_price).fillna(global_mean_price)
 
-        st.metric("💰 Estimated Price", f"₹ {round(prediction):,}")
+    # Model freq
+    input_df["model_freq"] = input_df["model_clean"].map(model_freq).fillna(0)
 
-        with st.expander("See input features"):
-            st.write(input_df)
+    # DEBUG CHECK
+    missing_cols = set(columns) - set(input_df.columns)
+    st.write("Missing columns:", missing_cols)
 
-    except Exception as e:
-        st.error(f"❌ Error: {e}")
+    # Align columns
+    input_df = input_df.reindex(columns=columns, fill_value=0)
 
-st.caption("⚠️ Price is an estimate based on historical data.")
+    # Predict
+    pred_log = model.predict(input_df)[0]
+    prediction = int(np.expm1(pred_log))
+
+    st.success(f"Estimated Price: ₹ {prediction:,}")
