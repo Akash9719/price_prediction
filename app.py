@@ -159,4 +159,3 @@ if st.button("Predict Price"):
 
     # Output
     st.success(f"💰 Estimated Price: ₹ {int(pred_price):,}")
-```
