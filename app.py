@@ -148,10 +148,9 @@ if st.button("Predict Price"):
     input_df = input_df.reindex(columns=columns, fill_value=0)
 
     # Prediction (log scale)
-    pred_log = model.predict(input_df)[0]
-
-    # Convert to price
-    pred_price = np.expm1(pred_log)
+    pred_ratio = model.predict(input_df)[0]
+    approx_new_price = input_df["approx_new_price"].iloc[0]
+    pred_price = pred_ratio * approx_new_price
 
     # Apply corrections
     pred_price = final_price(pred_price, age, brand_val)
