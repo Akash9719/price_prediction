@@ -88,7 +88,6 @@ def depreciation_factor(age, brand):
         else:
             return 0.10
 
-
 def final_price(pred_price, age, brand):
     base = pred_price * depreciation_factor(age, brand)
 
@@ -98,7 +97,6 @@ def final_price(pred_price, age, brand):
         base *= 0.90
 
     return base
-
 
 def apply_scrap_floor(price, age):
     scrap_value = 50000
@@ -133,28 +131,35 @@ if st.button("Predict Price"):
     # Feature Engineering
     input_df = create_features(input_df)
 
-    # Capture before reindex
+    # Capture BEFORE reindex
     age = input_df["age"].iloc[0]
     brand_val = input_df["brand"].iloc[0]
 
     # Brand encoding (compressed)
-    bv = input_df["brand"].map(brand_avg_price).fillna(0.5)
-    input_df["brand_value"] = np.clip(np.log1p(bv) / 10, 0, 2)
+    bv = input_df["brand"].map(brand_avg_price).fillna(500000)
+    input_df["brand_value"] = np.clip(np.log1p(bv)/10, 0, 2)
 
     # Model frequency
     input_df["model_freq"] = input_df["model_clean"].map(model_freq).fillna(0)
 
-    # Align columns
+    # Approx new price (SAFE — not dependent on columns)
+    approx_new_price = brand_avg_price.get(brand_val, 500000)
+
+    # Align columns for model
     input_df = input_df.reindex(columns=columns, fill_value=0)
 
-    # Prediction (log scale)
+    # Predict ratio
     pred_ratio = model.predict(input_df)[0]
-    approx_new_price = input_df["approx_new_price"].iloc[0]
+
+    # Convert to price
     pred_price = pred_ratio * approx_new_price
 
     # Apply corrections
     pred_price = final_price(pred_price, age, brand_val)
     pred_price = apply_scrap_floor(pred_price, age)
+
+    # Safety cap (important for new cars)
+    pred_price = min(pred_price, approx_new_price * 0.98)
 
     # Output
     st.success(f"💰 Estimated Price: ₹ {int(pred_price):,}")
