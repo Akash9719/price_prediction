@@ -26,14 +26,9 @@ def get_approx_new_price(brand):
         np.mean(list(brand_avg_price.values()))
     )
 
-    # ✅ SAME LOGIC AS NOTEBOOK
-    def get_approx_new_price(brand):
-        brand_key = brand.lower()
-        base_price = brand_avg_price.get(
-            brand_key,
-            np.mean(list(brand_avg_price.values()))
-        )
-    return base_price
+    # 🔥 Adjust inflated brand mean
+    return base_price * 0.75
+
 
 # -------------------------------
 # Page Config
@@ -107,12 +102,12 @@ if st.sidebar.button("💰 Predict Price"):
         )
 
         # -------------------------------
-        # 🔥 CRITICAL FIX: approx_new_price
+        # Approx New Price
         # -------------------------------
         approx_price = get_approx_new_price(brand)
 
         # -------------------------------
-        # Input Data (FIXED)
+        # Input Data (UNCHANGED STRUCTURE)
         # -------------------------------
         input_data = pd.DataFrame([{
             "year": year,
@@ -134,11 +129,9 @@ if st.sidebar.button("💰 Predict Price"):
             "brand_value": brand_value,
             "model_freq": model_freq,
 
-            # ✅ MUST MATCH NOTEBOOK
             "approx_new_price": approx_price
         }])
 
-        # Ensure correct column order
         input_data = input_data[columns]
 
         # -------------------------------
@@ -146,16 +139,25 @@ if st.sidebar.button("💰 Predict Price"):
         # -------------------------------
         pred_ratio = pipeline.predict(input_data)[0]
 
+        # -------------------------------
+        # 🔥 FINAL MARKET CORRECTION
+        # -------------------------------
         pred_ratio = min(pred_ratio, 1.0)
 
-        pred_ratio = pred_ratio * 0.85
+        # Age-based realistic depreciation
+        if age <= 1:
+            market_factor = 0.85
+        elif age <= 3:
+            market_factor = 0.75
+        elif age <= 5:
+            market_factor = 0.65
+        else:
+            market_factor = 0.5
 
-        predicted_price = pred_ratio * approx_price
+        # Blend model + market
+        final_ratio = (pred_ratio * 0.6) + (market_factor * 0.4)
 
-        # -------------------------------
-        # Convert to Price (CORRECT)
-        # -------------------------------
-        predicted_price = pred_ratio * approx_price
+        predicted_price = final_ratio * approx_price
 
         # -------------------------------
         # Confidence Range
