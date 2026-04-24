@@ -111,11 +111,6 @@ with col2:
 # Predict Button
 # -------------------------------
 
-st.write("Input to model:", final_input.head())
-
-# -------------------------------
-# Predict Button
-# -------------------------------
 import numpy as np
 
 brand_avg_price = pickle.load(open("brand_avg_price.pkl", "rb"))
