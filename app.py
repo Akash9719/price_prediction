@@ -27,9 +27,13 @@ def get_approx_new_price(brand):
     )
 
     # ✅ SAME LOGIC AS NOTEBOOK
-    variation = np.random.uniform(0.85, 1.15)
-
-    return base_price * variation
+    def get_approx_new_price(brand):
+        brand_key = brand.lower()
+        base_price = brand_avg_price.get(
+            brand_key,
+            np.mean(list(brand_avg_price.values()))
+        )
+    return base_price
 
 # -------------------------------
 # Page Config
