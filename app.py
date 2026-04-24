@@ -59,7 +59,28 @@ brand = st.sidebar.selectbox("Brand", [
     "BMW","Mercedes-Benz","Audi","Jaguar","Land Rover","Volvo"
 ])
 
-model = st.sidebar.text_input("Model (type manually)", "Swift")
+brand_model_map = {
+    "Maruti Suzuki": ["Swift", "Baleno", "WagonR", "Dzire", "Brezza"],
+    "Hyundai": ["i10", "i20", "Creta", "Verna", "Venue"],
+    "Tata": ["Harrier", "Safari", "Nexon", "Tiago", "Tigor", "Altroz"],
+    "Mahindra": ["Scorpio", "XUV300", "XUV500", "XUV700", "Bolero"],
+    "Kia": ["Seltos", "Sonet", "Carens"],
+    "Honda": ["City", "Amaze", "WR-V", "Jazz"],
+    "Toyota": ["Innova", "Fortuner", "Glanza", "Urban Cruiser"],
+    "Renault": ["Kwid", "Triber", "Kiger", "Duster"],
+    "Volkswagen": ["Polo", "Vento", "Taigun", "Virtus"],
+    "MG": ["Hector", "Astor", "ZS EV"],
+    "BMW": ["X1", "X3", "X5", "3 Series", "5 Series"],
+    "Mercedes-Benz": ["C-Class", "E-Class", "GLA", "GLC"],
+    "Audi": ["A3", "A4", "A6", "Q3", "Q5"],
+    "Jaguar": ["XE", "XF", "F-Pace"],
+    "Land Rover": ["Defender", "Discovery", "Range Rover Evoque"],
+}
+model_list = brand_model_map.get(brand, ["Other"])
+model = st.sidebar.selectbox(
+    "Model",
+    model_list
+)
 
 state = st.sidebar.selectbox("State", [
     "Delhi","Uttar Pradesh","Maharashtra","Karnataka","Tamil Nadu",
