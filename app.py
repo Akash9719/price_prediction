@@ -147,7 +147,14 @@ if st.button("Predict Price"):
         # Align columns
         input_data = input_data[columns]
 
-        prediction = pipeline.predict(input_data)[0]
+        pred_ratio = pipeline.predict(input_data)[0]
+        brand_key = brand.lower()
+        approx_price = brand_avg_price.get(
+            brand_key,
+            np.mean(list(brand_avg_price.values()))
+        )
+
+        prediction = pred_ratio * approx_price
 
         st.success(f"Estimated Price: ₹ {int(prediction):,}")
 
