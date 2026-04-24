@@ -17,18 +17,17 @@ brand_avg_price = {k.lower(): v for k, v in brand_avg_price.items()}
 model_freq_dict = {k.lower(): v for k, v in model_freq_dict.items()}
 
 # -------------------------------
-# Approx price function (SMART)
+# Approx price function (FIXED)
 # -------------------------------
-def get_approx_new_price(brand, model):
+def get_approx_new_price(brand):
     brand_key = brand.lower()
     base_price = brand_avg_price.get(
         brand_key,
         np.mean(list(brand_avg_price.values()))
     )
 
-    # Stable variation (important)
-    seed = abs(hash(model)) % 100
-    variation = 0.9 + (seed / 1000)  # ~0.9–1.0
+    # ✅ SAME LOGIC AS NOTEBOOK
+    variation = np.random.uniform(0.85, 1.15)
 
     return base_price * variation
 
@@ -43,7 +42,7 @@ st.markdown("""
 """)
 
 # -------------------------------
-# Sidebar Inputs (PRO UI)
+# Sidebar Inputs (UNCHANGED UI)
 # -------------------------------
 st.sidebar.header("🔧 Enter Car Details")
 
@@ -77,7 +76,7 @@ if st.sidebar.button("💰 Predict Price"):
 
     try:
         # -------------------------------
-        # Feature Engineering
+        # Feature Engineering (UNCHANGED)
         # -------------------------------
         age = current_year - year
 
@@ -104,7 +103,12 @@ if st.sidebar.button("💰 Predict Price"):
         )
 
         # -------------------------------
-        # Input Data
+        # 🔥 CRITICAL FIX: approx_new_price
+        # -------------------------------
+        approx_price = get_approx_new_price(brand)
+
+        # -------------------------------
+        # Input Data (FIXED)
         # -------------------------------
         input_data = pd.DataFrame([{
             "year": year,
@@ -124,9 +128,13 @@ if st.sidebar.button("💰 Predict Price"):
             "age_kms_ratio": age_kms_ratio,
             "depreciation_curve": depreciation_curve,
             "brand_value": brand_value,
-            "model_freq": model_freq
+            "model_freq": model_freq,
+
+            # ✅ MUST MATCH NOTEBOOK
+            "approx_new_price": approx_price
         }])
 
+        # Ensure correct column order
         input_data = input_data[columns]
 
         # -------------------------------
@@ -135,9 +143,8 @@ if st.sidebar.button("💰 Predict Price"):
         pred_ratio = pipeline.predict(input_data)[0]
 
         # -------------------------------
-        # Convert to Price
+        # Convert to Price (CORRECT)
         # -------------------------------
-        approx_price = get_approx_new_price(brand, model)
         predicted_price = pred_ratio * approx_price
 
         # -------------------------------
@@ -147,7 +154,7 @@ if st.sidebar.button("💰 Predict Price"):
         upper = predicted_price * 1.1
 
         # -------------------------------
-        # Display
+        # Display (UNCHANGED UI)
         # -------------------------------
         st.success("✅ Prediction Generated")
 
@@ -158,7 +165,6 @@ if st.sidebar.button("💰 Predict Price"):
 
         st.info(f"📊 Expected Range: ₹ {int(lower):,} – ₹ {int(upper):,}")
 
-        # Confidence indicator
         confidence = min(max(pred_ratio, 0), 1)
 
         st.progress(float(confidence))
