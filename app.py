@@ -107,6 +107,12 @@ with col2:
     # Fuel Type
     fuel = st.selectbox("⛽ Fuel Type", fuel_types)
 
+
+#---------------------------------
+st.write("🔍 Input Data Sent to Model:")
+st.dataframe(input_data)
+
+
 # -------------------------------
 # Predict Button
 # -------------------------------
@@ -136,10 +142,14 @@ if st.button("💰 Predict Price"):
             depreciation_curve = age * 0.1  # keep same as training
 
             # REAL VALUES (IMPORTANT FIX)
-            brand_value = brand_avg_price.get(brand, brand_avg_price.mean())
-            model_freq = model_freq_dict.get(model, 1)
+            brand_key = brand.strip().lower()
+            model_key = model.strip().lower()
+            brand_avg_price_lower = {k.lower(): v for k, v in brand_avg_price.items()}
+            model_freq_lower = {k.lower(): v for k, v in model_freq_dict.items()}
+            brand_value = brand_avg_price_lower.get(brand_key, np.mean(list(brand_avg_price_lower.values())))
+            model_freq = model_freq_lower.get(model_key, np.mean(list(model_freq_lower.values())))
 
-            model_clean = model.lower()
+            model_clean = model_key
 
             # Final Input
             input_data = pd.DataFrame([{
