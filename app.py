@@ -110,30 +110,79 @@ with col2:
 # -------------------------------
 # Predict Button
 # -------------------------------
+# -------------------------------
+# Predict Button
+# -------------------------------
 st.markdown("---")
 
 if st.button("💰 Predict Price"):
 
-    # Validation
     if any(v is None for v in [year, kms, owner, state, brand, model, fuel]):
         st.warning("⚠️ Please fill all fields before predicting")
     else:
         try:
-            # Input DataFrame (UNCHANGED LOGIC)
+            # -------------------------------
+            # Feature Engineering (CRITICAL FIX)
+            # -------------------------------
+            current_year = datetime.now().year
+            age = current_year - year
+
+            # Avoid division errors
+            km_per_year = kms / age if age > 0 else kms
+            age_kms = age * kms
+            age_kms_ratio = kms / age if age > 0 else kms
+
+            # Logs (safe)
+            import numpy as np
+            kms_log = np.log1p(kms)
+            age_log = np.log1p(age)
+
+            # Placeholder engineered features (safe defaults)
+            age_squared = age ** 2
+            depreciation_curve = age * 0.1  # simple proxy
+            brand_value = 1  # placeholder (if you had mapping, load it)
+            model_freq = 1   # placeholder
+            model_clean = model.lower()
+
+            # -------------------------------
+            # Final Input DataFrame
+            # -------------------------------
             input_data = pd.DataFrame([{
                 "year": year,
-                "kms_driven": kms,
-                "owner": owner,
+                "kms": kms,
+                "owners": owner,
                 "city": state,
                 "brand": brand,
                 "model": model,
-                "fuel": fuel
+                "model_clean": model_clean,
+                "fuel": fuel,
+
+                # Engineered Features
+                "age": age,
+                "age_squared": age_squared,
+                "age_log": age_log,
+                "kms_log": kms_log,
+                "km_per_year": km_per_year,
+                "age_kms": age_kms,
+                "age_kms_ratio": age_kms_ratio,
+                "depreciation_curve": depreciation_curve,
+                "brand_value": brand_value,
+                "model_freq": model_freq
             }])
 
+            # -------------------------------
+            # Align Columns (VERY IMPORTANT)
+            # -------------------------------
+            input_data = input_data.reindex(columns=columns, fill_value=0)
+
+            # -------------------------------
             # Prediction
+            # -------------------------------
             prediction = pipeline.predict(input_data)[0]
 
+            # -------------------------------
             # Output
+            # -------------------------------
             st.success("✅ Prediction Successful!")
 
             st.markdown(
