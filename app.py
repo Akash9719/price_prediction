@@ -173,7 +173,11 @@ if st.button("💰 Predict Price"):
             # -------------------------------
             # Align Columns (VERY IMPORTANT)
             # -------------------------------
-            input_data = input_data.reindex(columns=columns, fill_value=0)
+            final_input = pd.DataFrame(columns=columns)
+            for col in input_data.columns:
+                if col in final_input.columns:
+                    final_input[col] = input_data[col]
+            final_input = final_input.fillna(0)
 
             # -------------------------------
             # Prediction
