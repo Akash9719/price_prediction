@@ -116,7 +116,10 @@ st.write("Input to model:", final_input.head())
 # -------------------------------
 # Predict Button
 # -------------------------------
-st.markdown("---")
+import numpy as np
+
+brand_avg_price = pickle.load(open("brand_avg_price.pkl", "rb"))
+model_freq_dict = pickle.load(open("model_freq.pkl", "rb"))
 
 if st.button("💰 Predict Price"):
 
@@ -124,43 +127,35 @@ if st.button("💰 Predict Price"):
         st.warning("⚠️ Please fill all fields before predicting")
     else:
         try:
-            # -------------------------------
-            # Feature Engineering (CRITICAL FIX)
-            # -------------------------------
             current_year = datetime.now().year
             age = current_year - year
 
-            # Avoid division errors
+            # Feature Engineering (SAME AS TRAINING)
             km_per_year = kms / age if age > 0 else kms
             age_kms = age * kms
             age_kms_ratio = kms / age if age > 0 else kms
 
-            # Logs (safe)
-            import numpy as np
             kms_log = np.log1p(kms)
             age_log = np.log1p(age)
-
-            # Placeholder engineered features (safe defaults)
             age_squared = age ** 2
-            depreciation_curve = age * 0.1  # simple proxy
-            brand_value = 1  # placeholder (if you had mapping, load it)
-            model_freq = 1   # placeholder
+            depreciation_curve = age * 0.1  # keep same as training
+
+            # REAL VALUES (IMPORTANT FIX)
+            brand_value = brand_avg_price.get(brand, brand_avg_price.mean())
+            model_freq = model_freq_dict.get(model, 1)
+
             model_clean = model.lower()
 
-            # -------------------------------
-            # Final Input DataFrame
-            # -------------------------------
+            # Final Input
             input_data = pd.DataFrame([{
                 "year": year,
                 "kms": kms,
                 "owners": owner,
                 "city": state,
                 "brand": brand,
-                "model": model,
                 "model_clean": model_clean,
                 "fuel": fuel,
 
-                # Engineered Features
                 "age": age,
                 "age_squared": age_squared,
                 "age_log": age_log,
@@ -173,23 +168,12 @@ if st.button("💰 Predict Price"):
                 "model_freq": model_freq
             }])
 
-            # -------------------------------
-            # Align Columns (VERY IMPORTANT)
-            # -------------------------------
-            final_input = pd.DataFrame(columns=columns)
-            for col in input_data.columns:
-                if col in final_input.columns:
-                    final_input[col] = input_data[col]
-            final_input = final_input.fillna(0)
+            # Ensure column order
+            input_data = input_data[columns]
 
-            # -------------------------------
             # Prediction
-            # -------------------------------
             prediction = pipeline.predict(input_data)[0]
 
-            # -------------------------------
-            # Output
-            # -------------------------------
             st.success("✅ Prediction Successful!")
 
             st.markdown(
