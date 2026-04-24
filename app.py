@@ -1,25 +1,18 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import pickle
 from datetime import datetime
 
 # -------------------------------
-# Load Artifacts
+# Load model (pipeline)
 # -------------------------------
 pipeline = pickle.load(open("model.pkl", "rb"))
-columns = pickle.load(open("columns.pkl", "rb"))
-brand_avg_price = pickle.load(open("brand_avg_price.pkl", "rb"))
-model_freq_dict = pickle.load(open("model_freq.pkl", "rb"))
-
-# Normalize dictionaries (IMPORTANT)
-brand_avg_price = {k.lower(): v for k, v in brand_avg_price.items()}
-model_freq_dict = {k.lower(): v for k, v in model_freq_dict.items()}
 
 # -------------------------------
 # Page Config
 # -------------------------------
 st.set_page_config(page_title="Car Price Predictor", layout="wide")
+
 st.title("🚗 Car Price Prediction App")
 st.markdown("### Smart resale price prediction using ML")
 
@@ -70,7 +63,7 @@ owners = [1, 2, 3, 4]
 brands = list(brand_model_map.keys())
 
 # -------------------------------
-# UI Layout
+# Layout
 # -------------------------------
 col1, col2 = st.columns(2)
 
@@ -95,71 +88,22 @@ st.markdown("---")
 if st.button("💰 Predict Price"):
 
     try:
-        # -------------------------------
-        # Feature Engineering
-        # -------------------------------
-        current_year = datetime.now().year
-        age = current_year - year
-
-        km_per_year = kms / age if age > 0 else kms
-        age_kms = age * kms
-        age_kms_ratio = kms / age if age > 0 else kms
-
-        kms_log = np.log1p(kms)
-        age_log = np.log1p(age)
-        age_squared = age ** 2
-        depreciation_curve = age * 0.1
-
-        # Normalize inputs
-        brand_key = brand.strip().lower()
-        model_key = model.strip().lower()
-
-        # Real values (IMPORTANT)
-        brand_value = brand_avg_price.get(
-            brand_key, np.mean(list(brand_avg_price.values()))
-        )
-
-        model_freq = model_freq_dict.get(
-            model_key, np.mean(list(model_freq_dict.values()))
-        )
-
-        model_clean = model_key
-
-        # -------------------------------
-        # Create Input Data
-        # -------------------------------
+        # ONLY RAW INPUTS (IMPORTANT FIX)
         input_data = pd.DataFrame([{
             "year": year,
             "kms": kms,
             "owners": owner,
             "city": state,
             "brand": brand,
-            "model_clean": model_clean,
-            "fuel": fuel,
-
-            "age": age,
-            "age_squared": age_squared,
-            "age_log": age_log,
-            "kms_log": kms_log,
-            "km_per_year": km_per_year,
-            "age_kms": age_kms,
-            "age_kms_ratio": age_kms_ratio,
-            "depreciation_curve": depreciation_curve,
-            "brand_value": brand_value,
-            "model_freq": model_freq
+            "model": model,
+            "fuel": fuel
         }])
 
-        # Align columns EXACTLY
-        input_data = input_data[columns]
+        # Debug (optional)
+        # st.write(input_data)
 
-        # -------------------------------
-        # Predict
-        # -------------------------------
         prediction = pipeline.predict(input_data)[0]
 
-        # -------------------------------
-        # Output
-        # -------------------------------
         st.success("✅ Prediction Successful!")
 
         st.markdown(
