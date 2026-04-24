@@ -146,6 +146,12 @@ if st.sidebar.button("💰 Predict Price"):
         # -------------------------------
         pred_ratio = pipeline.predict(input_data)[0]
 
+        pred_ratio = min(pred_ratio, 1.0)
+
+        pred_ratio = pred_ratio * 0.85
+
+        predicted_price = pred_ratio * approx_price
+
         # -------------------------------
         # Convert to Price (CORRECT)
         # -------------------------------
