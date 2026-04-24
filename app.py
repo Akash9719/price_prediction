@@ -146,13 +146,33 @@ if st.sidebar.button("💰 Predict Price"):
 
         # Age-based realistic depreciation
         if age <= 1:
-            market_factor = 0.85
-        elif age <= 3:
+            market_factor = 0.80
+        elif age <= 2:
             market_factor = 0.75
-        elif age <= 5:
+        elif age <= 3:
+            market_factor = 0.70
+        elif age <= 4:
             market_factor = 0.65
+        elif age <= 5:
+            market_factor = 0.60
+        elif age <= 6:
+            market_factor = 0.55
+        elif age <=7:
+            market_factor = 0.50
+        elif age <=8:
+            market_factor = 0.45
+        elif age <=9:
+            market_factor = 0.40
+        elif age <=10:
+            market_factor = 0.35
+        elif age <=11:
+            market_factor = 0.30
+        elif age <=12:
+            market_factor = 0.25
+        elif age <=13:
+            market_factor = 0.22     
         else:
-            market_factor = 0.5
+            market_factor = 0.20
 
         # Blend model + market
         final_ratio = (pred_ratio * 0.6) + (market_factor * 0.4)
