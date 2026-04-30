@@ -195,24 +195,9 @@ if st.sidebar.button("💰 Predict Price"):
         else:
             market_factor = 0.20
 
-        if kms <= 20000:
-            kms_factor = 0.95
-        elif kms <= 40000:
-            kms_factor = 0.90
-        elif kms <= 60000:
-            kms_factor = 0.85
-        elif kms <= 80000:
-            kms_factor = 0.80
-        elif kms <= 100000:
-            kms_factor = 0.75
-        elif kms <= 150000:
-            kms_factor = 0.70
-        else:
-            kms_factor = 0.65
-
-       
+              
         # Blend model + market
-        final_ratio = (pred_ratio * 0.5) + (market_factor * 0.3) + (kms_factor * 0.2)
+        final_ratio = (pred_ratio * 0.6) + (market_factor * 0.4)
 
         predicted_price = final_ratio * approx_price
 
