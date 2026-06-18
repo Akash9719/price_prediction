@@ -2,7 +2,7 @@ import streamlit as st
 
 import numpy as np
 import pickle
-from datetime import datetime
+
 
 # -------------------------------
 # Load artifacts
